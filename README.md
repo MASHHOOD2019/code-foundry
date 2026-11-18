@@ -40,3 +40,31 @@ Organized 4 file(s):
   Documents: 1
   Images: 1
 ```
+
+## Day 15 - LRU Cache (C++)
+
+`day-15-lru-cache/lru_cache.hpp` and `main.cpp`
+
+A templated least-recently-used cache with O(1) average `get()` and
+`put()`: a doubly linked list keeps entries ordered by recency (front
+is most recently used, back is least recently used) and an unordered
+map from key to list node makes every lookup constant time. A full
+cache evicts the back entry in O(1). Updating an existing key
+refreshes its value and its recency, misses return `std::nullopt`,
+and capacity 0 is rejected at construction. No thread safety by
+design; wrap calls in a mutex if shared across threads. The demo in
+`main.cpp` verifies eviction order, updates, misses, and the
+capacity guard with assertions.
+
+How to run:
+
+```
+g++ -std=c++17 -Wall -Wextra -O2 main.cpp -o lru_demo
+./lru_demo
+```
+
+Example:
+
+```
+All LRU cache checks passed (capacity 3, eviction + update + miss behaviour verified).
+```
