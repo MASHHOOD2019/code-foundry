@@ -68,3 +68,41 @@ Example:
 ```
 All LRU cache checks passed (capacity 3, eviction + update + miss behaviour verified).
 ```
+
+## Day 16 - Duplicate File Finder (Python)
+
+`day-16-duplicate-finder/dupfind.py`
+
+Scans a directory tree and reports files with identical content, so
+wasted disk space can be reclaimed safely. It is fast on big trees:
+files are grouped by size first (a unique size cannot be a
+duplicate), then a small first-chunk hash filters the rest, and only
+the survivors get a full SHA-256 hash. `--delete` moves duplicates
+to a trash folder instead of deleting them outright, keeping the
+newest copy in each group, and `--restore` puts them back from the
+manifest. `--dry-run` previews everything, `--min-size` skips small
+files, and `--json` writes a machine-readable report. Stdlib only,
+no dependencies.
+
+How to run:
+
+```
+python3 dupfind.py ~/Downloads
+python3 dupfind.py ~/Photos --min-size 1M --json report.json
+python3 dupfind.py ~/Downloads --dry-run --delete
+python3 dupfind.py ~/Downloads --delete --yes
+python3 dupfind.py ~/Downloads --restore
+```
+
+Example:
+
+```
+Scanned 6 file(s) in /tmp/duptest
+
+Group 1 (3 copies, 5.9 KB each):
+  keep: /tmp/duptest/c.txt
+  dup:  /tmp/duptest/sub/b.txt
+  dup:  /tmp/duptest/a.txt
+
+2 duplicate group(s), 3 extra file(s), 11.7 KB reclaimable.
+```
