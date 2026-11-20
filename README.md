@@ -106,3 +106,35 @@ Group 1 (3 copies, 5.9 KB each):
 
 2 duplicate group(s), 3 extra file(s), 11.7 KB reclaimable.
 ```
+
+## Day 17 - Token Bucket Rate Limiter (C++)
+
+`day-17-rate-limiter/rate_limiter.hpp` and `main.cpp`
+
+A thread-safe token bucket rate limiter: the bucket holds up to
+`capacity` tokens and refills continuously at `rate_per_second`
+tokens per second. Each request spends one token (or more); when the
+bucket is empty the request is rejected immediately instead of
+queueing, so a burst can never overwhelm the downstream service.
+Every acquire is O(1) time and O(1) memory, and a single mutex
+guards all state, so the limiter is safe to share across threads.
+Oversized, zero, and negative requests are rejected without spending
+tokens, and fractional rates are supported.
+
+How to run:
+
+```
+g++ -std=c++17 -Wall -Wextra -O2 main.cpp -o rate_limiter_demo -pthread
+./rate_limiter_demo
+```
+
+Example:
+
+```
+Burst check passed: 5 allowed, 6th rejected.
+Refill check passed: 2 tokens back after ~200 ms.
+Validation check passed: bad requests rejected.
+Concurrency check passed: exactly 10 of 400 requests granted across 8 threads.
+Sustained-rate check passed: 19 requests in 1 s at 20 tokens/sec.
+All rate limiter checks passed.
+```
