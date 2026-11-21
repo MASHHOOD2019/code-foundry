@@ -138,3 +138,44 @@ Concurrency check passed: exactly 10 of 400 requests granted across 8 threads.
 Sustained-rate check passed: 19 requests in 1 s at 20 tokens/sec.
 All rate limiter checks passed.
 ```
+
+## Day 18 - Disk Usage Analyzer (Python)
+
+`day-18-disk-usage/diskusage.py`
+
+Answers "where did my disk space go?" for any folder: one walk of
+the tree totals the size of every directory and reports the largest
+files and the largest subdirectories, with a bar chart so the hogs
+are obvious at a glance. Directory totals are exact, each file's
+size is added to every ancestor up to the scanned root. Hidden
+files are skipped by default (`--all` includes them), symlinks are
+never followed, and unreadable entries are reported as warnings
+instead of crashing the run. `--top` limits the lists, `--depth`
+limits how deep the directory breakdown goes, `--min-size` (e.g.
+10K, 2M, 1G) hides small files, `--exclude` drops paths matching
+glob patterns, `--bytes` shows raw byte counts, and `--json`
+writes the full report as JSON. Stdlib only, no dependencies.
+
+How to run:
+
+```
+python3 diskusage.py ~/Downloads
+python3 diskusage.py ~/Projects --top 10 --depth 2
+python3 diskusage.py ~/Photos --min-size 10M --json report.json
+python3 diskusage.py . --exclude "*.log" --exclude "node_modules"
+```
+
+Example:
+
+```
+Disk usage for /tmp/dutest
+Total: 26.4 KB in 5 file(s), 4 directorie(s)
+
+Largest files:
+     8.8 KB  #############---------------------------  /tmp/dutest/logs/e.log
+     7.8 KB  ###########-----------------------------  /tmp/dutest/sub/c.bin
+
+Largest directories (depth <= 1):
+     9.8 KB  ##############--------------------------  /tmp/dutest/sub
+     8.8 KB  #############---------------------------  /tmp/dutest/logs
+```
