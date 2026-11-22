@@ -179,3 +179,34 @@ Largest directories (depth <= 1):
      9.8 KB  ##############--------------------------  /tmp/dutest/sub
      8.8 KB  #############---------------------------  /tmp/dutest/logs
 ```
+
+## Day 19 - Thread Pool (C++)
+
+`day-19-thread-pool/thread_pool.hpp` and `main.cpp`
+
+A fixed-size thread pool: submit work with `enqueue()` and get a
+`std::future` for the result. One mutex and condition variable guard
+the task queue; workers sleep while it is empty and wake on notify.
+`enqueue` is O(1) amortised, and exceptions thrown by a task travel
+through its future instead of killing the worker. Shutdown is
+graceful: the destructor stops accepting new work, lets already-queued
+tasks finish, then joins every worker, so no submitted task is ever
+dropped. Reuse the same pool for many short jobs instead of paying a
+thread-spawn cost per job.
+
+How to run:
+
+```
+g++ -std=c++17 -Wall -Wextra -O2 main.cpp -o thread_pool_demo -pthread
+./thread_pool_demo
+```
+
+Example:
+
+```
+Parallel sum check passed: 1..1000 = 500500.
+Exception check passed: error reached the caller, pool kept working.
+Shutdown check passed: all 20 queued tasks ran before join.
+Arguments check passed: enqueue(a, b) returned 42, void task ran.
+All thread pool checks passed.
+```
