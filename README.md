@@ -210,3 +210,44 @@ Shutdown check passed: all 20 queued tasks ran before join.
 Arguments check passed: enqueue(a, b) returned 42, void task ran.
 All thread pool checks passed.
 ```
+
+## Day 20 - Incremental Backup (Python)
+
+`day-20-incremental-backup/backup.py`
+
+Copies a folder to a backup destination, but only copies files that
+are new or changed since the last run. Change detection is
+content-based: size and mtime are checked first, and only files
+whose size or mtime moved get a SHA-256 hash, so a second run over
+an unchanged tree copies nothing and finishes fast. A JSON manifest
+(`.backup_manifest.json`) in the destination records every backed-up
+file's size, mtime, and hash, so later runs know what changed.
+`--verify` re-hashes the backup and reports mismatches or missing
+files, `--delete` prunes backup files whose source file is gone,
+`--exclude` skips paths matching a glob, and `--dry-run` previews
+everything first. Symlinks are never followed and unreadable files
+are reported as warnings instead of aborting the run. Stdlib only,
+no dependencies.
+
+How to run:
+
+```
+python3 backup.py ~/Projects ~/Backups/projects
+python3 backup.py ~/Projects ~/Backups/projects --dry-run
+python3 backup.py ~/Projects ~/Backups/projects --delete
+python3 backup.py ~/Projects ~/Backups/projects --verify
+python3 backup.py ~/Projects ~/Backups/projects --exclude "*.log" --exclude "__pycache__"
+```
+
+Example:
+
+```
+copy: a.txt (12 B)
+copy: big.bin (4.9 KB)
+copy: sub/b.txt (9 B)
+
+Copied 3 file(s) (4.9 KB), skipped 0 unchanged file(s).
+
+Copied 0 file(s) (0 B), skipped 3 unchanged file(s).
+Verified 3 file(s): 0 mismatched, 0 missing.
+```
