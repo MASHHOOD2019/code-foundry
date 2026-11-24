@@ -251,3 +251,40 @@ Copied 3 file(s) (4.9 KB), skipped 0 unchanged file(s).
 Copied 0 file(s) (0 B), skipped 3 unchanged file(s).
 Verified 3 file(s): 0 mismatched, 0 missing.
 ```
+
+## Day 21 - Memory Pool (C++)
+
+`day-21-memory-pool/memory_pool.hpp` and `main.cpp`
+
+A fixed-size block allocator for one object type: it pre-allocates
+large chunks, carves them into equal-size blocks and hands them out
+from an intrusive free list, so `allocate()` and `deallocate()` are
+O(1) pointer operations with no system call on the hot path. Each
+block is sized to hold a `T` or the free-list pointer, whichever is
+larger, and rounded up to `alignof(T)` so every block start stays
+properly aligned for placement-new. `create()` / `destroy()` wrap
+construction and destruction, so the pool owns both memory and
+lifetime, and freeing a block returns it to the head of the list so
+it is reused by the next allocation. A new chunk is grown only when
+the free list is empty; the destructor releases all chunks. Not
+thread-safe by design, no lock on the hot path: give each thread its
+own pool or guard it with a mutex. The demo verifies values,
+alignment, address reuse of a freed block, growth across 3 chunks
+for 40 allocations, and that `destroy()` runs the destructor.
+
+How to run:
+
+```
+g++ -std=c++17 -Wall -Wextra -O2 main.cpp -o memory_pool_demo
+./memory_pool_demo
+```
+
+Example:
+
+```
+Allocate + values + alignment check passed.
+Free-block reuse check passed: freed address handed out again.
+Chunk growth check passed: 40 allocations over 3 chunks, all values intact, all blocks returned.
+Destructor check passed: destroy() runs the destructor.
+All memory pool checks passed.
+```
