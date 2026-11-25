@@ -288,3 +288,42 @@ Chunk growth check passed: 40 allocations over 3 chunks, all values intact, all 
 Destructor check passed: destroy() runs the destructor.
 All memory pool checks passed.
 ```
+
+## Day 22 - Secret Scanner (Python)
+
+`day-22-secret-scanner/secretscan.py`
+
+Scans a directory tree for secrets that should never be committed:
+AWS keys, GitHub and Slack tokens, Stripe keys, Google API keys,
+JWTs, private key headers, and password-like assignments with
+suspicious values. A Shannon-entropy check catches long
+random-looking values assigned to a secret-like name even when no
+fixed pattern matches. Findings never print the secret itself: only
+the first 3 and last 2 characters are shown, so the report is safe
+to paste into a ticket or a build log. Placeholders such as
+`changeme` and `your_api_key` are ignored; `.git`,
+`__pycache__`, `node_modules`, binary files, and files over 1 MiB
+are skipped; `.secretscanignore` globs and `--allowlist` regexes
+cover known fixtures; and a line ending in `# secretscan:ignore`
+is suppressed. It exits 1 when it finds anything, so it works as a
+pre-commit check or a CI gate, and `--json` prints machine-readable
+output. Stdlib only, no dependencies.
+
+How to run:
+
+```
+python3 secretscan.py ~/Projects/my-app
+python3 secretscan.py ~/Projects/my-app --json
+python3 secretscan.py ~/Projects/my-app --exclude "*.min.js" --allowlist allowlist.txt
+```
+
+Example:
+
+```
+config.py:1 [high] aws-access-key: AKI***************LE
+config.py:3 [high] github-token: ghp***************************GH
+sub/keys.txt:5 [medium] generic-secret-assignment: X9$***************1p
+
+Scanned 5 file(s), skipped 0.
+Found 7 potential secret(s). Rotate any real credentials before committing.
+```
