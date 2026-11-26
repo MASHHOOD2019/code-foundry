@@ -327,3 +327,44 @@ sub/keys.txt:5 [medium] generic-secret-assignment: X9$***************1p
 Scanned 5 file(s), skipped 0.
 Found 7 potential secret(s). Rotate any real credentials before committing.
 ```
+
+## Day 23 - Thread-Safe Blocking Queue (C++)
+
+`day-23-thread-safe-queue/blocking_queue.hpp` and `main.cpp`
+
+A bounded, thread-safe producer/consumer queue: the workhorse behind
+thread-pool task queues, log pipelines, and message brokers' in-memory
+buffers. A `std::deque<T>` holds the items under one mutex, with two
+condition variables separating the wait conditions (`not_full_` for
+producers, `not_empty_` for consumers), so a push only wakes
+consumers and a pop only wakes producers. The bounded capacity gives
+backpressure instead of letting an unbounded queue grow until the
+process runs out of memory; `push()` blocks when full and `pop()`
+blocks when empty. `close()` wakes every waiter, refuses further
+pushes, and lets `pop()` drain the remaining items before returning
+`false`, so consumers loop on "pop until false" and no thread is ever
+left parked on a dead queue. `try_push`/`try_pop` take a timeout for
+callers that need to poll or give up, and perfect-forwarding
+`emplace`/`push` keep move-only types such as `unique_ptr` working.
+All operations are O(1) amortized plus one mutex acquisition. The demo
+in `main.cpp` verifies FIFO order, timeout behaviour on full/empty
+queues, close/drain shutdown, move-only items, and a 4-producer /
+4-consumer run in which all 10,000 items arrive exactly once.
+
+How to run:
+
+```
+g++ -std=c++17 -Wall -Wextra -O2 -pthread main.cpp -o queue_demo
+./queue_demo
+```
+
+Example:
+
+```
+FIFO order check passed.
+Timeout check passed: try_push waited 50ms on a full queue, try_pop timed out on an empty one.
+Close check passed: blocked waiter woke, queued items drained, later pushes refused.
+Move-only check passed: unique_ptr<int> round-tripped.
+Producer/consumer check passed: 4 consumers took all 10000 items from 4 producers exactly once (sum 49995000 matches 0..9999).
+All blocking queue checks passed.
+```
