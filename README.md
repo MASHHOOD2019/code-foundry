@@ -368,3 +368,65 @@ Move-only check passed: unique_ptr<int> round-tripped.
 Producer/consumer check passed: 4 consumers took all 10000 items from 4 producers exactly once (sum 49995000 matches 0..9999).
 All blocking queue checks passed.
 ```
+
+## Day 24 - Access Log Analyzer (Python)
+
+`day-24-log-analyzer/logalyzer.py`
+
+Reads an Apache or Nginx access log in combined log format and
+answers the questions every site owner asks first: who is hitting
+the site, what is failing, and what is suspicious. It reports
+total requests, unique visitors and bytes served, status codes
+individually and by class (2xx / 3xx / 4xx / 5xx), the error rate,
+the busiest hour, top client IPs, and the most-requested endpoints
+with query strings stripped so `/search?q=a` and `/search?q=b`
+count as one endpoint. It also lists the most-requested missing
+pages (404s), which usually point at broken links or probing, and
+separates known bots from real browsers by user agent. Lines that
+do not match the combined format are counted and reported instead
+of crashing the run. `--ip`, `--since` and `--until` filter the
+report, `--errors` prints the raw error lines, and `--json` writes
+a machine-readable report. Stdlib only, no dependencies.
+
+How to run:
+
+```
+python3 logalyzer.py /var/log/nginx/access.log
+python3 logalyzer.py access.log --top 5 --errors
+python3 logalyzer.py access.log --ip 203.0.113.10
+python3 logalyzer.py access.log --since 2026-11-20 --until 2026-11-27 --json
+```
+
+Example:
+
+```
+Requests: 9 from 3 unique IP(s)
+Data served: 10.9 KB
+Malformed lines skipped: 1
+
+Status codes:
+  200: 4 (44.4%)
+  301: 1 (11.1%)
+  304: 1 (11.1%)
+  404: 2 (22.2%)
+  500: 1 (11.1%)
+By class: 2xx 4, 3xx 2, 4xx 2, 5xx 1
+Error rate: 33.3% (3 of 9)
+Busiest hour: 09:00 with 4 requests
+
+Top 3 IPs:
+       5  203.0.113.10
+       2  198.51.100.7
+       2  192.0.2.44
+
+Top 3 endpoints:
+       2  /pricing
+       2  /
+       1  /nonexistent-page
+
+Top 3 missing pages (404):
+       1  /nonexistent-page
+       1  /wp-admin
+
+Bot traffic: 3 requests (33.3%)
+```
